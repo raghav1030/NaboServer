@@ -1,0 +1,63 @@
+# ---- Python/Django ----
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.pot
+*.log
+db.sqlite3
+.env
+.env.*
+venv/
+env/
+local_settings.py
+
+# ---- Go ----
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+bin/
+# Uncomment if you use vendoring
+# vendor/
+
+# ---- Proto/Buf ----
+libs/proto/gen/
+*.pb.go
+*.pb.py
+
+# ---- Node.js (if you add frontend later) ----
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# ---- IDEs and Editors ----
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ---- OS Files ----
+.DS_Store
+Thumbs.db
+
+# ---- Coverage, Test, and Build Artifacts ----
+.coverage
+.tox/
+.eggs/
+dist/
+build/
+*.egg-info/
+
+# ---- Docker ----
+*.pid
+*.seed
+*.pid.lock
+
+# ---- Misc ----
+*.bak
+*.tmp
+*.orig
