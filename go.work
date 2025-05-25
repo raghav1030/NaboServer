@@ -1,0 +1,8 @@
+go 1.23.8
+
+use (
+	./apps/chat-service
+	./apps/location-service
+	./apps/ws-gateway
+	./libs/proto/gen/go
+)

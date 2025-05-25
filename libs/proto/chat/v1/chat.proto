@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+option go_package = "github.com/raghav1030/NaboServer/libs/proto/gen/go/chat/v1;chatv1";
+
+package chat.v1;
+
+import "google/protobuf/timestamp.proto";
+
+message FileAttachment {
+  string url = 1;         // Where the file can be downloaded/viewed
+  string file_name = 2;   // Original file name
+  string mime_type = 3;   // e.g. "image/png", "audio/mpeg"
+  int64  size_bytes = 4;  // File size
+  string thumbnail_url = 5; // Optional: thumbnail for images/videos
+}
+
+// Add an optional attachment to each message type
+message DirectMessage {
+  string from_user_id = 1;
+  string to_user_id = 2;
+  string text = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  FileAttachment attachment = 5; // Optional
+}
+
+message GroupMessage {
+  string from_user_id = 1;
+  string group_id = 2;
+  string text = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  FileAttachment attachment = 5; // Optional
+}
+
+message EphemeralMessage {
+  string from_user_id = 1;
+  string activity_id = 2;
+  string text = 3;
+  google.protobuf.Timestamp timestamp = 4;
+  FileAttachment attachment = 5; // Optional
+}
+
+
+// Request message for sending chat messages
+message SendMessageRequest {
+  oneof message {
+    DirectMessage direct = 1;
+    GroupMessage group = 2;
+    EphemeralMessage ephemeral = 3;
+  }
+}
+
+// Response message for sending chat messages
+message SendMessageResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+service ChatService {
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+}

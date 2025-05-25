@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+option go_package = "github.com/raghav1030/NaboServer/libs/proto/gen/go/gateway/v1;gatewayv1";
+
+package gateway.v1;
+
+import "location/v1/location.proto";
+import "chat/v1/chat.proto";
+import "notification/v1/notification.proto";
+
+
+message StreamRequest {
+  string session_id = 1;
+  oneof payload {
+    location.v1.UpdateLocationRequest location_update = 2;
+    location.v1.GetNearbyUsersRequest nearby_request = 3;
+    chat.v1.SendMessageRequest chat_message = 4;
+    notification.v1.SendNotificationRequest notification = 5;
+  }
+}
+
+message StreamResponse {
+  string session_id = 1;
+  oneof payload {
+    location.v1.UpdateLocationResponse location_update = 2;
+    location.v1.GetNearbyUsersResponse nearby_response = 3;
+    chat.v1.SendMessageResponse chat_message = 4;
+    notification.v1.SendNotificationResponse notification = 5;
+  }
+}
+
+service GatewayService {
+  rpc Stream(stream StreamRequest) returns (stream StreamResponse);
+}
