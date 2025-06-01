@@ -18,6 +18,6 @@ func NewChatServer(chatService *service.ChatService) *ChatServer {
 }
 
 func (s *ChatServer) SendMessage(ctx context.Context, req *chatv1.SendMessageRequest) (*chatv1.SendMessageResponse, error) {
-	log.Printf("Received SendMessage gRPC request")
+	log.Println("Received SendMessage")
 	return s.chatService.HandleSendMessage(ctx, req)
 }

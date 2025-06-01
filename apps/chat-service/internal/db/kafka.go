@@ -2,9 +2,9 @@ package db
 
 import (
 	"context"
+
 	"github.com/segmentio/kafka-go"
 	"google.golang.org/protobuf/proto"
-	chatv1 "github.com/raghav1030/NaboServer/libs/proto/gen/go/chat/v1"
 )
 
 type KafkaManager struct {
@@ -20,15 +20,13 @@ func NewKafkaManager(brokers []string) *KafkaManager {
 	}
 }
 
-func (k *KafkaManager) MarshalMessage(msg *chatv1.SendMessageRequest) ([]byte, error) {
-	return proto.Marshal(msg)
-}
-
-func (k *KafkaManager) PublishMessage(ctx context.Context, topic string, data []byte) error {
+func (k *KafkaManager) Publish(ctx context.Context, topic string, msg proto.Message) error {
+	data, err := proto.Marshal(msg)
+	if err != nil {
+		return err
+	}
 	return k.writer.WriteMessages(ctx, kafka.Message{
 		Topic: topic,
 		Value: data,
 	})
 }
-
-// For completeness, you can add a consumer for delivering messages to clients via gateway

@@ -3,51 +3,59 @@ package service
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/raghav1030/NaboServer/apps/chat-service/internal/db"
 	chatv1 "github.com/raghav1030/NaboServer/libs/proto/gen/go/chat/v1"
 )
 
 type ChatService struct {
-	kafkaManager *db.KafkaManager
-	// Add room manager, DB, etc. as needed
+	pg    *db.PostgresManager
+	kafka *db.KafkaManager
 }
 
-func NewChatService(kafkaManager *db.KafkaManager) *ChatService {
-	return &ChatService{kafkaManager: kafkaManager}
+func NewChatService(pg *db.PostgresManager, kafka *db.KafkaManager) *ChatService {
+	return &ChatService{pg: pg, kafka: kafka}
 }
 
 func (s *ChatService) HandleSendMessage(ctx context.Context, req *chatv1.SendMessageRequest) (*chatv1.SendMessageResponse, error) {
+	var conversationID, senderID, text, msgType string
+	var attachment *chatv1.FileAttachment
 	var topic string
-	var msgType string
 
 	switch m := req.Message.(type) {
 	case *chatv1.SendMessageRequest_Direct:
-		topic = fmt.Sprintf("user-%s", m.Direct.ToUserId) // One-to-one topic
+		conversationID = fmt.Sprintf("dm-%s-%s", m.Direct.FromUserId, m.Direct.ToUserId)
+		senderID = m.Direct.FromUserId
+		text = m.Direct.Text
 		msgType = "direct"
+		attachment = m.Direct.Attachment
+		topic = fmt.Sprintf("dm-%s", m.Direct.ToUserId)
 	case *chatv1.SendMessageRequest_Group:
-		topic = fmt.Sprintf("group-%s", m.Group.GroupId) // Group chat topic
+		conversationID = fmt.Sprintf("group-%s", m.Group.GroupId)
+		senderID = m.Group.FromUserId
+		text = m.Group.Text
 		msgType = "group"
+		attachment = m.Group.Attachment
+		topic = fmt.Sprintf("group-%s", m.Group.GroupId)
 	case *chatv1.SendMessageRequest_Ephemeral:
-		topic = fmt.Sprintf("activity-%s", m.Ephemeral.ActivityId) // Ephemeral chat topic
+		conversationID = fmt.Sprintf("activity-%s", m.Ephemeral.ActivityId)
+		senderID = m.Ephemeral.FromUserId
+		text = m.Ephemeral.Text
 		msgType = "ephemeral"
+		attachment = m.Ephemeral.Attachment
+		topic = fmt.Sprintf("activity-%s", m.Ephemeral.ActivityId)
 	default:
 		return &chatv1.SendMessageResponse{Success: false, Message: "Unknown message type"}, nil
 	}
 
-	// Serialize the message (use protobuf marshal)
-	data, err := s.kafkaManager.MarshalMessage(req)
+	_, err := s.pg.SaveMessage(ctx, conversationID, senderID, text, msgType, attachment)
 	if err != nil {
-		log.Printf("Failed to marshal chat message: %v", err)
-		return &chatv1.SendMessageResponse{Success: false, Message: "Serialization error"}, err
+		return &chatv1.SendMessageResponse{Success: false, Message: "DB error"}, err
 	}
 
-	// Publish to Kafka
-	if err := s.kafkaManager.PublishMessage(ctx, topic, data); err != nil {
-		log.Printf("Failed to publish to Kafka: %v", err)
-		return &chatv1.SendMessageResponse{Success: false, Message: "Kafka publish error"}, err
+	if err := s.kafka.Publish(ctx, topic, req); err != nil {
+		return &chatv1.SendMessageResponse{Success: false, Message: "Kafka error"}, err
 	}
 
-	return &chatv1.SendMessageResponse{Success: true, Message: fmt.Sprintf("%s message sent", msgType)}, nil
+	return &chatv1.SendMessageResponse{Success: true, Message: "Message sent"}, nil
 }

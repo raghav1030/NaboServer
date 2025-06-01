@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	locationService := service.NewLocationService()
+	locationService := service.NewLocationService("")
 
 	locationServer := handler.NewLocationServer(locationService)
 

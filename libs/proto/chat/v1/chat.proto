@@ -55,6 +55,12 @@ message SendMessageResponse {
   string message = 2;
 }
 
+
+message MessageEnvelope {
+  repeated string recipients = 1; // User IDs who should receive this message
+  SendMessageRequest message = 2; // The actual chat message
+}
+
 service ChatService {
   rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
 }
